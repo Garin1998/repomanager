@@ -8,7 +8,7 @@ public record BranchResponse(
 
         @JsonProperty("name")
         String name,
-        @JsonProperty("last_Sha")
+        @JsonProperty("last_sha")
         String lastSha
 
 ) {}

@@ -4,14 +4,13 @@ import com.repomanager.models.responses.AllRepositoriesWithBranchesResponse;
 import com.repomanager.models.requests.RepositoriesWithBranchesRequest;
 import com.repomanager.services.RepoService;
 import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -40,6 +39,7 @@ public class RepoController {
     })
     ResponseEntity<List<AllRepositoriesWithBranchesResponse>> getAllRepositoriesAndItsBranches(
             @RequestBody RepositoriesWithBranchesRequest request) {
-        return new ResponseEntity<>(repoService.getAllRepositoriesAndItsBranches(request), HttpStatus.OK);
+        return ResponseEntity.ok(repoService.getAllRepositoriesAndItsBranches(request));
     }
+
 }
