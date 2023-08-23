@@ -1,5 +1,6 @@
 package com.repomanager.units;
 
+import com.repomanager.models.errors.UserNotFound;
 import com.repomanager.models.requests.RepositoriesWithBranchesRequest;
 import com.repomanager.models.responses.AllRepositoriesWithBranchesResponse;
 import com.repomanager.models.responses.BranchResponse;
@@ -117,7 +118,7 @@ class RepoControllerUnitTest {
 
         RepositoriesWithBranchesRequest request = getRequest("Garin1997");
 
-        when(repoService.getAllRepositoriesAndItsBranches(request)).thenReturn(List.of());
+        when(repoService.getAllRepositoriesAndItsBranches(request)).thenThrow(UserNotFound.class);
 
         given()
                 .accept(ContentType.JSON)

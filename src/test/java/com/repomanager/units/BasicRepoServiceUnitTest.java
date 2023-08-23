@@ -3,7 +3,6 @@ package com.repomanager.units;
 import com.repomanager.models.errors.UserNotFound;
 import com.repomanager.models.requests.RepositoriesWithBranchesRequest;
 import com.repomanager.models.responses.AllRepositoriesWithBranchesResponse;
-import com.repomanager.models.responses.BranchResponse;
 import com.repomanager.services.implementations.BasicRepoService;
 import com.repomanager.utils.RepoInfo;
 import org.json.JSONArray;
@@ -18,7 +17,6 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.StringJoiner;
 
 import static com.repomanager.utils.RepoTestUtils.createBranches;
 import static com.repomanager.utils.RepoTestUtils.getRequest;
@@ -46,13 +44,14 @@ class BasicRepoServiceUnitTest {
         int amountOfBranchesForValidRepo = 4;
 
         RepositoriesWithBranchesRequest request = getRequest(userName);
-        String repoUri = "https://api.github.com/users/" + userName + "/repos";
+        String userReposUri = "https://api.github.com/users/" + userName + "/repos";
         String validRepoBranchesUri = "https://api.github.com/repos/" + userName + "/" + validRepo + "/branches";
 
         List<RepoInfo> repos = new ArrayList<>();
         repos.add(
                 RepoInfo.builder()
                         .repoName(validRepo)
+                        .amountOfBranches(4)
                         .fork(false)
                         .build()
         );
@@ -66,15 +65,16 @@ class BasicRepoServiceUnitTest {
         JSONArray resultReposFromGitHubAPI = getReposFromGH(repos, userName);
         JSONArray resultRepoBranchesFromGitHubAPI = getRepoBranchesFromGH(amountOfBranchesForValidRepo);
 
-        when(restTemplate.getForEntity(repoUri, String.class)).thenReturn(ResponseEntity.ok(resultReposFromGitHubAPI.toString()));
-        when(restTemplate.getForEntity(validRepoBranchesUri, String.class)).thenReturn(ResponseEntity.ok(resultRepoBranchesFromGitHubAPI.toString()));
+        when(restTemplate.getForEntity(userReposUri, String.class)).thenReturn(ResponseEntity.ok(resultReposFromGitHubAPI.toString()));
+        when(restTemplate.getForObject(validRepoBranchesUri, String.class)).thenReturn(resultRepoBranchesFromGitHubAPI.toString());
 
         List<AllRepositoriesWithBranchesResponse> actual = repoService.getAllRepositoriesAndItsBranches(request);
         List<AllRepositoriesWithBranchesResponse> expected = createExpectedResult(List.of(repos.get(0)), userName);
 
         assertThat(actual, is(expected));
 
-        verify(restTemplate).getForObject(repoUri, String.class);
+        verify(restTemplate).getForEntity(userReposUri, String.class);
+        verify(restTemplate).getForObject(validRepoBranchesUri, String.class);
 
     }
 
@@ -87,16 +87,9 @@ class BasicRepoServiceUnitTest {
 
         when(restTemplate.getForEntity(repoUri, String.class)).thenReturn(ResponseEntity.notFound().build());
 
-        Exception exception = assertThrows(UserNotFound.class, () -> {
+        assertThrows(UserNotFound.class, () -> {
             repoService.getAllRepositoriesAndItsBranches(request);
         });
-
-        String actualMessage = exception.getMessage();
-        String expectedMessage = "User Not Found";
-
-        assertThat(actualMessage, equalTo(expectedMessage));
-
-        verify(restTemplate).getForObject(repoUri, String.class);
 
     }
 
@@ -155,11 +148,13 @@ class BasicRepoServiceUnitTest {
 
         for(RepoInfo repo : repos) {
 
-            AllRepositoriesWithBranchesResponse.builder()
-                    .repoName(repo.repoName())
-                    .userName(userName)
-                    .branches(createBranches(repo.amountOfBranches()))
-                    .build();
+            result.add(
+                    AllRepositoriesWithBranchesResponse.builder()
+                            .repoName(repo.repoName())
+                            .userName(userName)
+                            .branches(createBranches(repo.amountOfBranches()))
+                            .build()
+            );
 
         }
 

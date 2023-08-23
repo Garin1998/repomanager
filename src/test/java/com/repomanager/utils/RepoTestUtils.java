@@ -23,7 +23,7 @@ public class RepoTestUtils {
 
             BranchResponse branch = BranchResponse.builder()
                     .name("Branch" + i)
-                    .lastSha("4221218f7f89c8c110dfb8b8807de7779b976d5" + i)
+                    .lastSha("aac24e83e177f276acee6c32488623e02fe2255" + i)
                     .build();
 
             branches.add(branch);
