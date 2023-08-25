@@ -31,9 +31,9 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 
 import static org.mockito.Mockito.when;
-import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.DEFINED_PORT;
+import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
-@SpringBootTest(webEnvironment = DEFINED_PORT)
+@SpringBootTest(webEnvironment = RANDOM_PORT)
 @ActiveProfiles("integration")
 class RepoControllerIntegrationTest {
 
