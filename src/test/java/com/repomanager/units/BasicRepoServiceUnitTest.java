@@ -1,57 +1,49 @@
 package com.repomanager.units;
 
-import com.repomanager.models.errors.UserNotFound;
+import com.repomanager.models.exceptions.GenericException;
+import com.repomanager.models.exceptions.UserNotFoundException;
 import com.repomanager.models.requests.RepositoriesWithBranchesRequest;
 import com.repomanager.models.responses.AllRepositoriesWithBranchesResponse;
+import com.repomanager.models.responses.RepositoryResponse;
 import com.repomanager.services.implementations.BasicRepoService;
 import com.repomanager.utils.RepoInfo;
 import org.json.JSONArray;
-import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+import org.mockito.ArgumentMatchers;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.ResponseEntity;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
-import static com.repomanager.utils.RepoTestUtils.createBranches;
-import static com.repomanager.utils.RepoTestUtils.getRequest;
+import static com.repomanager.consts.ErrorResponseConsts.EXTERNAL_API_ERROR;
+import static com.repomanager.utils.RepoTestUtils.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 import static org.hamcrest.CoreMatchers.*;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @ActiveProfiles(value = "dev")
 class BasicRepoServiceUnitTest {
 
-    @InjectMocks
+    @MockBean
     BasicRepoService repoService;
 
-    @Mock
-    RestTemplate restTemplate;
-
     @Test
-    void whenRequestIsValidAndGitHubAPIWithProvidedUserNameReturnReposThenReturnList() {
+    void whenRequestIsValidAndGitHubAPIWithProvidedUserNameReturnReposAsSet() {
 
         String userName = "Garin1998";
         String validRepo = "AlgoLearn";
         int amountOfBranchesForValidRepo = 4;
 
-        RepositoriesWithBranchesRequest request = getRequest(userName);
-        String userReposUri = "https://api.github.com/users/" + userName + "/repos";
-        String validRepoBranchesUri = "https://api.github.com/repos/" + userName + "/" + validRepo + "/branches";
-
         List<RepoInfo> repos = new ArrayList<>();
         repos.add(
                 RepoInfo.builder()
                         .repoName(validRepo)
-                        .amountOfBranches(4)
+                        .amountOfBranches(amountOfBranchesForValidRepo)
                         .fork(false)
                         .build()
         );
@@ -62,19 +54,27 @@ class BasicRepoServiceUnitTest {
                         .build()
         );
 
-        JSONArray resultReposFromGitHubAPI = getReposFromGH(repos, userName);
-        JSONArray resultRepoBranchesFromGitHubAPI = getRepoBranchesFromGH(amountOfBranchesForValidRepo);
+        RepositoriesWithBranchesRequest request = getRequest(userName);
 
-        when(restTemplate.getForEntity(userReposUri, String.class)).thenReturn(ResponseEntity.ok(resultReposFromGitHubAPI.toString()));
-        when(restTemplate.getForObject(validRepoBranchesUri, String.class)).thenReturn(resultRepoBranchesFromGitHubAPI.toString());
+        RepositoryResponse validRepositoryResponse =
+                RepositoryResponse.builder()
+                        .userName(request.userName())
+                        .repoName(validRepo)
+                        .build();
 
-        List<AllRepositoriesWithBranchesResponse> actual = repoService.getAllRepositoriesAndItsBranches(request);
-        List<AllRepositoriesWithBranchesResponse> expected = createExpectedResult(List.of(repos.get(0)), userName);
+        JSONArray resultReposFromGitHubApi = getReposFromGH(repos, userName);
+        JSONArray resultRepoBranchesFromGitHubApi = getRepoBranchesFromGH(amountOfBranchesForValidRepo);
+
+        when(repoService.getAllRepositoriesAndItsBranches(request)).thenCallRealMethod();
+        when(repoService.retrieveUsersRepositoriesFromApi(request.userName())).thenReturn(resultReposFromGitHubApi.toString());
+        when(repoService.retrieveFromUserReposInfoToBeIncludedInReturnAsList(ArgumentMatchers.any())).thenCallRealMethod();
+        when(repoService.retrieveRepositoryBranchesFromApi(validRepositoryResponse)).thenReturn(resultRepoBranchesFromGitHubApi.toString());
+        when(repoService.retrieveFromBranchesInfoToBeIncludedInReturnAsList(ArgumentMatchers.any())).thenCallRealMethod();
+
+        Set<AllRepositoriesWithBranchesResponse> actual = repoService.getAllRepositoriesAndItsBranches(request);
+        Set<AllRepositoriesWithBranchesResponse> expected = createExpectedResult(List.of(repos.get(0)), userName);
 
         assertThat(actual, is(expected));
-
-        verify(restTemplate).getForEntity(userReposUri, String.class);
-        verify(restTemplate).getForObject(validRepoBranchesUri, String.class);
 
     }
 
@@ -83,82 +83,26 @@ class BasicRepoServiceUnitTest {
 
         String userName = "Garin1997";
         RepositoriesWithBranchesRequest request = getRequest(userName);
-        String repoUri = "https://api.github.com/users/" + userName + "/repos";
 
-        when(restTemplate.getForEntity(repoUri, String.class)).thenReturn(ResponseEntity.notFound().build());
+        when(repoService.getAllRepositoriesAndItsBranches(request)).thenCallRealMethod();
+        when(repoService.retrieveUsersRepositoriesFromApi(request.userName())).thenThrow(new UserNotFoundException());
 
-        assertThrows(UserNotFound.class, () -> {
-            repoService.getAllRepositoriesAndItsBranches(request);
-        });
+        assertThrows(UserNotFoundException.class, () -> repoService.getAllRepositoriesAndItsBranches(request));
 
     }
 
-    JSONArray getReposFromGH(List<RepoInfo> repos, String userName) {
+    @Test
+    void whenProvidedUserNameIsValidButExternalApiReturnErrorThenThrowException() {
 
-        JSONArray jsonArray = new JSONArray();
+        String userName = "Garin1998";
+        RepositoriesWithBranchesRequest request = getRequest(userName);
 
-        JSONObject owner = new JSONObject();
-        owner.put("id", "449626721");
-        owner.put("login", userName);
+        when(repoService.getAllRepositoriesAndItsBranches(request)).thenCallRealMethod();
+        when(repoService.retrieveUsersRepositoriesFromApi(request.userName())).thenThrow(new GenericException(EXTERNAL_API_ERROR));
 
-        int i = 0;
-        for(RepoInfo repo : repos) {
+        Exception exception = assertThrows(GenericException.class, () -> repoService.getAllRepositoriesAndItsBranches(request));
 
-            JSONObject repoAsJson = new JSONObject();
-            repoAsJson.put("id", "54962672" + i++);
-            repoAsJson.put("name", repo.repoName());
-            repoAsJson.put("owner", owner);
-            repoAsJson.put("fork", repo.fork());
-
-            jsonArray.put(repoAsJson);
-
-        }
-
-        return jsonArray;
-
-    }
-
-
-    JSONArray getRepoBranchesFromGH(int amountOfBranches) {
-
-        JSONArray jsonArray = new JSONArray();
-
-        for(int i = 0; i < amountOfBranches; i++) {
-
-            JSONObject commit = new JSONObject();
-            commit.put("sha", "aac24e83e177f276acee6c32488623e02fe2255" + i);
-
-            JSONObject branch = new JSONObject();
-            branch.put("name", "Branch" + i);
-            branch.put("commit", commit);
-
-
-            jsonArray.put(branch);
-
-        }
-
-        return jsonArray;
-
-    }
-
-
-    List<AllRepositoriesWithBranchesResponse> createExpectedResult(List<RepoInfo> repos, String userName) {
-
-        List<AllRepositoriesWithBranchesResponse> result = new ArrayList<>();
-
-        for(RepoInfo repo : repos) {
-
-            result.add(
-                    AllRepositoriesWithBranchesResponse.builder()
-                            .repoName(repo.repoName())
-                            .userName(userName)
-                            .branches(createBranches(repo.amountOfBranches()))
-                            .build()
-            );
-
-        }
-
-        return result;
+        assertThat(exception.getMessage(), equalTo(EXTERNAL_API_ERROR));
 
     }
 

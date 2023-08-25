@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -14,32 +15,46 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
+import java.util.Set;
+
+import static com.repomanager.consts.ControllerConsts.REQUEST_REPO_URL;
+import static com.repomanager.consts.ErrorResponseConsts.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/repo_manager")
+@RequestMapping(REQUEST_REPO_URL)
+@Slf4j
 public class RepoController {
 
     private final RepoService repoService;
 
     @PostMapping(value = "/getAllRepositoriesAndBranches", produces = MediaType.APPLICATION_JSON_VALUE,  consumes = MediaType.APPLICATION_JSON_VALUE)
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully retrieved"),
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Successfully retrieved"),
             @ApiResponse(
                     responseCode = "404",
-                    description = "User not found",
+                    description = USER_NOT_FOUND,
                     content = @Content()
             ),
             @ApiResponse(
                     responseCode = "406",
-                    description = "Request content not valid",
+                    description = REQUEST_NOT_VALID,
+                    content = @Content()
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = EXTERNAL_API_ERROR,
                     content = @Content()
             )
     })
-    ResponseEntity<List<AllRepositoriesWithBranchesResponse>> getAllRepositoriesAndItsBranches(
+    ResponseEntity<Set<AllRepositoriesWithBranchesResponse>> getAllRepositoriesAndItsBranches(
             @RequestBody RepositoriesWithBranchesRequest request) {
+
+        log.info("POST body: " + request);
         return ResponseEntity.ok(repoService.getAllRepositoriesAndItsBranches(request));
+
     }
 
 }

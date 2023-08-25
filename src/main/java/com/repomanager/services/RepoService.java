@@ -3,10 +3,10 @@ package com.repomanager.services;
 import com.repomanager.models.responses.AllRepositoriesWithBranchesResponse;
 import com.repomanager.models.requests.RepositoriesWithBranchesRequest;
 
-import java.util.List;
+import java.util.Set;
 
 public interface RepoService {
 
-    List<AllRepositoriesWithBranchesResponse> getAllRepositoriesAndItsBranches(RepositoriesWithBranchesRequest request);
+    Set<AllRepositoriesWithBranchesResponse> getAllRepositoriesAndItsBranches(RepositoriesWithBranchesRequest request);
 
 }

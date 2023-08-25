@@ -1,10 +1,10 @@
-package com.repomanager.models.errors;
+package com.repomanager.models.exceptions;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 
 @Builder
-public record DefaultErrorResponse(
+public record DefaultExceptionResponse(
 
         @JsonProperty("status")
         int status,

@@ -3,7 +3,7 @@ package com.repomanager.models.responses;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 
-import java.util.List;
+import java.util.Set;
 
 @Builder
 public record AllRepositoriesWithBranchesResponse(
@@ -13,6 +13,6 @@ public record AllRepositoriesWithBranchesResponse(
         @JsonProperty("owner")
         String userName,
         @JsonProperty("branches")
-        List<BranchResponse> branches
+        Set<BranchResponse> branches
 
 ) {}

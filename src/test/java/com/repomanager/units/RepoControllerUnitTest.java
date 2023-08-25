@@ -1,40 +1,45 @@
 package com.repomanager.units;
 
-import com.repomanager.models.errors.UserNotFound;
+import com.repomanager.models.exceptions.GenericException;
+import com.repomanager.models.exceptions.UserNotFoundException;
 import com.repomanager.models.requests.RepositoriesWithBranchesRequest;
 import com.repomanager.models.responses.AllRepositoriesWithBranchesResponse;
-import com.repomanager.models.responses.BranchResponse;
 import com.repomanager.services.RepoService;
 import com.repomanager.utils.RepoInfo;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
+import org.json.JSONArray;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.skyscreamer.jsonassert.JSONAssert;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
-import static com.repomanager.utils.RepoTestUtils.createBranches;
-import static com.repomanager.utils.RepoTestUtils.getRequest;
+import static com.repomanager.consts.ControllerConsts.REQUEST_REPO_URL;
+import static com.repomanager.consts.ErrorResponseConsts.*;
+import static com.repomanager.utils.RepoTestUtils.*;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.DEFINED_PORT;
+import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
-@SpringBootTest(webEnvironment = DEFINED_PORT)
+@SpringBootTest(webEnvironment = RANDOM_PORT)
 @ActiveProfiles(value = "dev")
 class RepoControllerUnitTest {
 
     @Value("${server.address}")
     String address;
 
-    @Value("${server.port}")
+    @LocalServerPort
     int port;
 
     @MockBean
@@ -44,7 +49,7 @@ class RepoControllerUnitTest {
     void setUp() {
 
         RestAssured.baseURI = "http://" + address;
-        RestAssured.basePath = "/repo_manager";
+        RestAssured.basePath = REQUEST_REPO_URL;
         RestAssured.port = port;
 
     }
@@ -60,38 +65,45 @@ class RepoControllerUnitTest {
         repos.add(
                 RepoInfo.builder()
                         .repoName("AlgoLearn")
+                        .fork(true)
                         .amountOfBranches(4)
                         .build()
         );
         repos.add(
                 RepoInfo.builder()
                         .repoName("Chronos")
+                        .fork(true)
                         .amountOfBranches(2)
                         .build()
         );
         repos.add(
                 RepoInfo.builder()
                         .repoName("magazineDB")
+                        .fork(false)
                         .amountOfBranches(1)
                         .build()
         );
 
-        List<AllRepositoriesWithBranchesResponse> expectedResponse =
-                getExpectedResponse(
-                        repos, userName
-                );
+        Set<AllRepositoriesWithBranchesResponse> expectedResponseAsList = createExpectedResult(List.of(repos.get(2)), userName);
 
-        when(repoService.getAllRepositoriesAndItsBranches(request)).thenReturn(expectedResponse);
+        when(repoService.getAllRepositoriesAndItsBranches(request)).thenReturn(expectedResponseAsList);
 
-        given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
-                .body(request)
+        String response =
+                given()
+                    .accept(ContentType.JSON)
+                    .contentType(ContentType.JSON)
+                    .body(request)
                 .when()
-                .post("/getAllRepositoriesAndBranches")
+                    .post("/getAllRepositoriesAndBranches")
                 .then()
-                .statusCode(HttpStatus.OK.value())
-                .contentType(ContentType.JSON);
+                    .statusCode(HttpStatus.OK.value())
+                    .contentType(ContentType.JSON)
+                    .extract().asString();
+
+        JSONArray actualResponse = new JSONArray(response);
+        JSONArray expectedResponseAsJson = new JSONArray(expectedResponseAsList);
+
+        JSONAssert.assertEquals(expectedResponseAsJson, actualResponse, false);
 
         verify(repoService).getAllRepositoriesAndItsBranches(request);
 
@@ -109,7 +121,7 @@ class RepoControllerUnitTest {
                 .statusCode(HttpStatus.NOT_ACCEPTABLE.value())
                 .contentType(ContentType.JSON)
                 .body("status", equalTo(HttpStatus.NOT_ACCEPTABLE.value()))
-                .body("Message", equalTo("Request content not valid"));
+                .body("Message", equalTo(REQUEST_NOT_VALID));
 
     }
 
@@ -118,7 +130,7 @@ class RepoControllerUnitTest {
 
         RepositoriesWithBranchesRequest request = getRequest("Garin1997");
 
-        when(repoService.getAllRepositoriesAndItsBranches(request)).thenThrow(UserNotFound.class);
+        when(repoService.getAllRepositoriesAndItsBranches(request)).thenThrow(UserNotFoundException.class);
 
         given()
                 .accept(ContentType.JSON)
@@ -130,30 +142,32 @@ class RepoControllerUnitTest {
                 .statusCode(HttpStatus.NOT_FOUND.value())
                 .contentType(ContentType.JSON)
                 .body("status", equalTo(HttpStatus.NOT_FOUND.value()))
-                .body("Message", equalTo("User not found"));
+                .body("Message", equalTo(USER_NOT_FOUND));
 
         verify(repoService).getAllRepositoriesAndItsBranches(request);
 
     }
 
+    @Test
+    void whenExternalApiReturnForbiddenThenReturn500() {
 
+        RepositoriesWithBranchesRequest request = getRequest("Garin1997");
 
-    List<AllRepositoriesWithBranchesResponse> getExpectedResponse(List<RepoInfo> repos, String userName) {
+        when(repoService.getAllRepositoriesAndItsBranches(request)).thenThrow(new GenericException(EXTERNAL_API_ERROR));
 
-        List<AllRepositoriesWithBranchesResponse> expectedResponse = new ArrayList<>();
+        given()
+                .accept(ContentType.JSON)
+                .contentType(ContentType.JSON)
+                .body(request)
+                .when()
+                .post("/getAllRepositoriesAndBranches")
+                .then()
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                .contentType(ContentType.JSON)
+                .body("status", equalTo(HttpStatus.INTERNAL_SERVER_ERROR.value()))
+                .body("Message", equalTo(EXTERNAL_API_ERROR));
 
-        for(RepoInfo repo : repos) {
-            AllRepositoriesWithBranchesResponse singleResponse = AllRepositoriesWithBranchesResponse.builder()
-                    .repoName(repo.repoName())
-                    .userName(userName)
-                    .branches(createBranches(repo.amountOfBranches()))
-                    .build();
-
-            expectedResponse.add(singleResponse);
-
-        }
-
-        return expectedResponse;
+        verify(repoService).getAllRepositoriesAndItsBranches(request);
 
     }
 
