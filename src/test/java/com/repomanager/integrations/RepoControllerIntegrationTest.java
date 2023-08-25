@@ -1,6 +1,5 @@
 package com.repomanager.integrations;
 
-import com.github.tomakehurst.wiremock.WireMockServer;
 import com.repomanager.models.exceptions.GenericException;
 import com.repomanager.models.exceptions.UserNotFoundException;
 import com.repomanager.models.requests.RepositoriesWithBranchesRequest;
@@ -17,13 +16,13 @@ import org.skyscreamer.jsonassert.JSONAssert;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.repomanager.consts.ControllerConsts.REQUEST_REPO_URL;
 import static com.repomanager.consts.ErrorResponseConsts.*;
 import static com.repomanager.utils.RepoTestUtils.*;
@@ -38,10 +37,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 @ActiveProfiles("integration")
 class RepoControllerIntegrationTest {
 
-    @Value("${server.address}")
-    String address;
-
-    @Value("${server.port}")
+    @LocalServerPort
     int port;
 
     @MockBean
@@ -50,7 +46,7 @@ class RepoControllerIntegrationTest {
     @BeforeEach
     void setUp() {
 
-        RestAssured.baseURI = "http://" + address;
+        RestAssured.baseURI = "http://localhost";
         RestAssured.basePath = REQUEST_REPO_URL;
         RestAssured.port = port;
 

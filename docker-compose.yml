@@ -1,0 +1,8 @@
+version: '3.8'
+services:
+  repomanager:
+    build: .
+    image: repomanager:latest
+    env_file: ./.env
+    ports:
+      - ${REPOMANAGER_LOCAL_PORT}:${REPOMANAGER_DOCKER_PORT}

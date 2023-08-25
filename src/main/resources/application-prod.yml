@@ -1,0 +1,2 @@
+server:
+  port: ${REPOMANAGER_LOCAL_PORT}

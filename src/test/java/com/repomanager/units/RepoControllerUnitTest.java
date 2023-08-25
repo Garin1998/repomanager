@@ -12,7 +12,6 @@ import org.json.JSONArray;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -36,9 +35,6 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 @ActiveProfiles(value = "dev")
 class RepoControllerUnitTest {
 
-    @Value("${server.address}")
-    String address;
-
     @LocalServerPort
     int port;
 
@@ -48,7 +44,7 @@ class RepoControllerUnitTest {
     @BeforeEach
     void setUp() {
 
-        RestAssured.baseURI = "http://" + address;
+        RestAssured.baseURI = "http://localhost";
         RestAssured.basePath = REQUEST_REPO_URL;
         RestAssured.port = port;
 
