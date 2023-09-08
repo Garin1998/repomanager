@@ -2,10 +2,8 @@ package com.repomanager.services.implementations;
 
 import com.repomanager.models.exceptions.GenericException;
 import com.repomanager.models.exceptions.UserNotFoundException;
-import com.repomanager.models.responses.AllRepositoriesWithBranchesResponse;
 import com.repomanager.models.requests.RepositoriesWithBranchesRequest;
-import com.repomanager.models.responses.BranchResponse;
-import com.repomanager.models.responses.RepositoryResponse;
+import com.repomanager.models.responses.*;
 import com.repomanager.services.RepoService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -48,7 +46,7 @@ public class BasicRepoService implements RepoService {
 
             Set<BranchResponse> branches = retrieveFromBranchesInfoToBeIncludedInReturnAsList(repoBranchesResultAsJson);
 
-            repositoriesWithBranchesResponses.add(AllRepositoriesWithBranchesResponse.builder()
+            repositoriesWithBranchesResponses.add(AllRepositoriesWithBranchesResponseBuilder.builder()
                     .repoName(dto.repoName())
                     .userName(dto.userName())
                     .branches(branches)
@@ -85,7 +83,7 @@ public class BasicRepoService implements RepoService {
                 .map(e -> (JSONObject) e)
                 .filter(e -> !e.getBoolean("fork"))
                 .map(
-                        e -> RepositoryResponse.builder()
+                        e -> RepositoryResponseBuilder.builder()
                                 .userName(e.getJSONObject("owner").getString("login"))
                                 .repoName(e.getString("name"))
                                 .build()
@@ -112,7 +110,7 @@ public class BasicRepoService implements RepoService {
         return StreamSupport.stream(resultsToBeProcessed.spliterator(), false)
                 .map(e -> (JSONObject) e)
                 .map(
-                        e -> BranchResponse.builder()
+                        e -> BranchResponseBuilder.builder()
                                 .name(e.getString("name"))
                                 .lastSha(e.getJSONObject("commit").getString("sha"))
                                 .build()

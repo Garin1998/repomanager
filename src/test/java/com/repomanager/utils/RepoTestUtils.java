@@ -1,8 +1,11 @@
 package com.repomanager.utils;
 
 import com.repomanager.models.requests.RepositoriesWithBranchesRequest;
+import com.repomanager.models.requests.RepositoriesWithBranchesRequestBuilder;
 import com.repomanager.models.responses.AllRepositoriesWithBranchesResponse;
+import com.repomanager.models.responses.AllRepositoriesWithBranchesResponseBuilder;
 import com.repomanager.models.responses.BranchResponse;
+import com.repomanager.models.responses.BranchResponseBuilder;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -14,7 +17,7 @@ public class RepoTestUtils {
 
     public static RepositoriesWithBranchesRequest getRequest(String userName) {
 
-        return RepositoriesWithBranchesRequest.builder()
+        return RepositoriesWithBranchesRequestBuilder.builder()
                 .userName(userName)
                 .build();
 
@@ -70,7 +73,7 @@ public class RepoTestUtils {
         for(RepoInfo repo : repos) {
 
             result.add(
-                    AllRepositoriesWithBranchesResponse.builder()
+                    AllRepositoriesWithBranchesResponseBuilder.builder()
                             .repoName(repo.repoName())
                             .userName(userName)
                             .branches(createBranches(repo.amountOfBranches()))
@@ -88,7 +91,7 @@ public class RepoTestUtils {
 
         for (int i = 0; i < amountOfBranches; i++) {
 
-            BranchResponse branch = BranchResponse.builder()
+            BranchResponse branch = BranchResponseBuilder.builder()
                     .name("Branch" + i)
                     .lastSha("aac24e83e177f276acee6c32488623e02fe2255" + i)
                     .build();

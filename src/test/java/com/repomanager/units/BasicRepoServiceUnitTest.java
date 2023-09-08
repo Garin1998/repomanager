@@ -5,6 +5,7 @@ import com.repomanager.models.exceptions.UserNotFoundException;
 import com.repomanager.models.requests.RepositoriesWithBranchesRequest;
 import com.repomanager.models.responses.AllRepositoriesWithBranchesResponse;
 import com.repomanager.models.responses.RepositoryResponse;
+import com.repomanager.models.responses.RepositoryResponseBuilder;
 import com.repomanager.services.implementations.BasicRepoService;
 import com.repomanager.utils.RepoInfo;
 import org.json.JSONArray;
@@ -20,9 +21,10 @@ import java.util.Set;
 
 import static com.repomanager.consts.ErrorResponseConsts.EXTERNAL_API_ERROR;
 import static com.repomanager.utils.RepoTestUtils.*;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.hamcrest.CoreMatchers.*;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest
@@ -57,7 +59,7 @@ class BasicRepoServiceUnitTest {
         RepositoriesWithBranchesRequest request = getRequest(userName);
 
         RepositoryResponse validRepositoryResponse =
-                RepositoryResponse.builder()
+                RepositoryResponseBuilder.builder()
                         .userName(request.userName())
                         .repoName(validRepo)
                         .build();

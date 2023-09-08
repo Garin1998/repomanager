@@ -20,6 +20,7 @@
 		<org.json.version>20230618</org.json.version>
 		<rest-assured.version>5.3.0</rest-assured.version>
 		<hamcrest.version>2.2</hamcrest.version>
+		<record.builder.version>37</record.builder.version>
 	</properties>
 	<dependencies>
 
@@ -77,6 +78,13 @@
 					<artifactId>android-json</artifactId>
 				</exclusion>
 			</exclusions>
+		</dependency>
+
+		<dependency>
+			<groupId>io.soabase.record-builder</groupId>
+			<artifactId>record-builder-processor</artifactId>
+			<version>${record.builder.version}</version>
+			<scope>provided</scope>
 		</dependency>
 
 	</dependencies>

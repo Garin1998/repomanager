@@ -1,9 +1,9 @@
 package com.repomanager.models.requests;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Builder;
+import io.soabase.recordbuilder.core.RecordBuilder;
 
-@Builder
+@RecordBuilder
 public record RepositoriesWithBranchesRequest(
 
         @JsonProperty("user_name")

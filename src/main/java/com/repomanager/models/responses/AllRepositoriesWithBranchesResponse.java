@@ -1,11 +1,11 @@
 package com.repomanager.models.responses;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Builder;
+import io.soabase.recordbuilder.core.RecordBuilder;
 
 import java.util.Set;
 
-@Builder
+@RecordBuilder
 public record AllRepositoriesWithBranchesResponse(
 
         @JsonProperty("name")

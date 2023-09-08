@@ -1,9 +1,9 @@
 package com.repomanager.models.responses;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Builder;
+import io.soabase.recordbuilder.core.RecordBuilder;
 
-@Builder
+@RecordBuilder
 public record RepositoryResponse(
 
         @JsonProperty("repository")

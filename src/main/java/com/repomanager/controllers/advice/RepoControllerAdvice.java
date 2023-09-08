@@ -1,6 +1,7 @@
 package com.repomanager.controllers.advice;
 
 import com.repomanager.models.exceptions.DefaultExceptionResponse;
+import com.repomanager.models.exceptions.DefaultExceptionResponseBuilder;
 import com.repomanager.models.exceptions.GenericException;
 import com.repomanager.models.exceptions.UserNotFoundException;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +25,7 @@ public class RepoControllerAdvice {
         return ResponseEntity
                 .status(HttpStatus.NOT_ACCEPTABLE.value())
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(DefaultExceptionResponse.builder()
+                .body(DefaultExceptionResponseBuilder.builder()
                         .status(HttpStatus.NOT_ACCEPTABLE.value())
                         .message(REQUEST_NOT_VALID)
                         .build());
@@ -38,7 +39,7 @@ public class RepoControllerAdvice {
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND.value())
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(DefaultExceptionResponse.builder()
+                .body(DefaultExceptionResponseBuilder.builder()
                         .status(HttpStatus.NOT_FOUND.value())
                         .message(USER_NOT_FOUND)
                         .build());
@@ -52,7 +53,7 @@ public class RepoControllerAdvice {
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(DefaultExceptionResponse.builder()
+                .body(DefaultExceptionResponseBuilder.builder()
                         .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
                         .message(EXTERNAL_API_ERROR)
                         .build());

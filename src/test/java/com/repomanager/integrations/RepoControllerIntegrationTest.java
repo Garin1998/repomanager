@@ -4,6 +4,7 @@ import com.repomanager.models.exceptions.GenericException;
 import com.repomanager.models.exceptions.UserNotFoundException;
 import com.repomanager.models.requests.RepositoriesWithBranchesRequest;
 import com.repomanager.models.responses.RepositoryResponse;
+import com.repomanager.models.responses.RepositoryResponseBuilder;
 import com.repomanager.services.implementations.BasicRepoService;
 import com.repomanager.utils.RepoInfo;
 import io.restassured.RestAssured;
@@ -13,7 +14,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
 import org.skyscreamer.jsonassert.JSONAssert;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -26,10 +26,8 @@ import java.util.List;
 import static com.repomanager.consts.ControllerConsts.REQUEST_REPO_URL;
 import static com.repomanager.consts.ErrorResponseConsts.*;
 import static com.repomanager.utils.RepoTestUtils.*;
-import static com.repomanager.utils.RepoTestUtils.createExpectedResult;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
-
 import static org.mockito.Mockito.when;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
@@ -77,7 +75,7 @@ class RepoControllerIntegrationTest {
         );
 
         RepositoryResponse validRepositoryResponse =
-                RepositoryResponse.builder()
+                RepositoryResponseBuilder.builder()
                         .userName(request.userName())
                         .repoName(validRepo)
                         .build();
